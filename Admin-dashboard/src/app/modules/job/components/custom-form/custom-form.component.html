@@ -1,0 +1,419 @@
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-md-5">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-gradient-primary text-white py-3">
+          <h5 class="m-0 pb-2 fw-semibold">
+            <i class="fas fa-plus-circle me-2"></i> إدارة حقول الفئة
+          </h5>
+        </div>
+        <div class="card-body">
+          <!-- Category Selection -->
+          <div class="mb-3">
+            <label class="form-label">اختر الفئة</label>
+            <select
+              class="form-select"
+              [(ngModel)]="selectedCategoryId"
+              (change)="onCategorySelect()"
+              [disabled]="isSubmitting"
+            >
+              <option [value]="null">-- اختر فئة --</option>
+              <option
+                *ngFor="let cat of flattenCategories(categoriesTree)"
+                [value]="cat.id"
+              >
+                {{ getCategoryPrefix(cat.level) }} {{ cat.en_name }} ({{
+                  cat.ar_name
+                }})
+              </option>
+            </select>
+          </div>
+
+          <!-- Field Form -->
+          <form
+            [formGroup]="dynamicForm"
+            (ngSubmit)="selectedField ? updateField() : addField()"
+            novalidate
+          >
+            <div class="mb-3">
+              <label class="form-label">نوع الحقل</label>
+              <select
+                class="form-control"
+                formControlName="fieldType"
+                [disabled]="isSubmitting"
+                (change)="onFieldTypeChange()"
+              >
+                <option *ngFor="let type of fieldTypes" [value]="type">
+                  {{ type }}
+                </option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">الاسم بالإنجليزية</label>
+              <input
+                type="text"
+                class="form-control"
+                formControlName="en_name"
+                [class.is-invalid]="
+                  dynamicForm.get('en_name')?.invalid && showValidation
+                "
+                [disabled]="isSubmitting"
+              />
+              <div
+                *ngIf="dynamicForm.get('en_name')?.invalid && showValidation"
+                class="invalid-feedback"
+              >
+                هذا الحقل مطلوب
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">الاسم بالعربية</label>
+              <input
+                type="text"
+                class="form-control"
+                formControlName="ar_name"
+                [class.is-invalid]="
+                  dynamicForm.get('ar_name')?.invalid && showValidation
+                "
+                [disabled]="isSubmitting"
+              />
+              <div
+                *ngIf="dynamicForm.get('ar_name')?.invalid && showValidation"
+                class="invalid-feedback"
+              >
+                هذا الحقل مطلوب
+              </div>
+            </div>
+
+            <div
+              class="mb-3"
+              *ngIf="
+                ['radio', 'select', 'checkbox'].includes(
+                  dynamicForm.value.fieldType
+                )
+              "
+            >
+              <label class="form-label">الخيارات (سطر لكل قيمة)</label>
+              <textarea
+                class="form-control"
+                formControlName="options"
+                rows="3"
+                [disabled]="isSubmitting"
+              ></textarea>
+              <small class="text-muted"
+                >مثال:<br />خيار 1<br />خيار 2<br />خيار 3</small
+              >
+            </div>
+
+            <div
+              class="row mb-3"
+              *ngIf="
+                dynamicForm.value.fieldType === 'text' ||
+                dynamicForm.value.fieldType === 'number' ||
+                dynamicForm.value.fieldType === 'textarea'
+              "
+            >
+              <div class="col">
+                <label class="form-label">الحد الأدنى</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  formControlName="min_length"
+                  [disabled]="isSubmitting"
+                />
+              </div>
+              <div class="col">
+                <label class="form-label">الحد الأقصى</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  formControlName="max_length"
+                  [disabled]="isSubmitting"
+                />
+              </div>
+            </div>
+
+            <!-- <div class="mb-3">
+              <label class="form-label">الأيقونة المخصصة</label>
+              <input
+                type="text"
+                class="form-control"
+                formControlName="custom_icon"
+                [disabled]="isSubmitting"
+              />
+            </div> -->
+
+            <div class="form-check mb-3">
+              <input
+                type="checkbox"
+                class="form-check-input"
+                id="isRequired"
+                formControlName="is_required"
+                [disabled]="isSubmitting"
+              />
+              <label class="form-check-label" for="isRequired"
+                >حقل إجباري</label
+              >
+            </div>
+
+            <div class="d-grid gap-2">
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="isSubmitting || !selectedCategoryId"
+              >
+                <span *ngIf="!isSubmitting">
+                  <i
+                    class="fas"
+                    [class.fa-save]="selectedField"
+                    [class.fa-plus]="!selectedField"
+                  ></i>
+                  {{ selectedField ? "تحديث الحقل" : "إضافة حقل" }}
+                </span>
+                <span *ngIf="isSubmitting">
+                  <i class="fas fa-spinner fa-spin me-1"></i> جاري المعالجة...
+                </span>
+              </button>
+
+              <button
+                *ngIf="selectedField"
+                type="button"
+                class="btn btn-outline-secondary"
+                (click)="cancelEdit()"
+                [disabled]="isSubmitting"
+              >
+                إلغاء التعديل
+              </button>
+            </div>
+          </form>
+
+          <hr />
+
+          <!-- Field List -->
+          <div class="card mt-3 shadow-sm border-0">
+            <div class="card-header bg-secondary text-white">
+              <h5 class="mb-0">الحقول المضافة</h5>
+            </div>
+            <div class="card-body">
+              <div
+                *ngIf="formFields.length === 0"
+                class="text-center text-muted"
+              >
+                لم يتم إضافة أي حقول بعد
+              </div>
+              <ul class="list-group">
+                <li class="list-group-item" *ngFor="let field of formFields">
+                  <div
+                    class="d-flex justify-content-between align-items-center"
+                  >
+                    <div>
+                      <strong>{{ field.en_name }}</strong> ({{
+                        field.ar_name
+                      }})<br />
+                      <small class="text-muted">{{ field.type }}</small>
+                      <span
+                        *ngIf="field.is_required"
+                        class="badge bg-danger ms-2"
+                        >إجباري</span
+                      >
+                    </div>
+                    <div>
+                      <button
+                        class="btn btn-sm btn-outline-primary me-2"
+                        (click)="editField(field)"
+                        [disabled]="isSubmitting"
+                      >
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button
+                        class="btn btn-sm btn-outline-danger"
+                        (click)="deleteField(field.id!)"
+                        [disabled]="isSubmitting"
+                      >
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div *ngIf="field.custom_icon" class="mt-2">
+                    <small class="text-muted"
+                      >الأيقونة: {{ field.custom_icon }}</small
+                    >
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-7">
+      <!-- Form Preview -->
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-success text-white">
+          <h4 class="mb-0">معاينة النموذج</h4>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="previewForm" (ngSubmit)="onSubmit()">
+            <div *ngFor="let field of formFields">
+              <!-- Text/Number/Email/Password -->
+              <div
+                class="mb-3"
+                *ngIf="
+                  ['text', 'number', 'email', 'password'].includes(field.type)
+                "
+              >
+                <label>
+                  {{ field.ar_name }} ({{ field.en_name }})
+                  <span class="text-danger" *ngIf="field.is_required">*</span>
+                </label>
+                <input
+                  [type]="field.type"
+                  class="form-control"
+                  [formControlName]="field.en_name"
+                  [attr.minlength]="field.min_length || null"
+                  [attr.maxlength]="field.max_length || null"
+                  [disabled]="isSubmitting"
+                />
+                <div
+                  *ngIf="
+                    previewForm.get(field.en_name)?.invalid &&
+                    previewForm.get(field.en_name)?.touched
+                  "
+                  class="invalid-feedback d-block"
+                >
+                  <div
+                    *ngIf="previewForm.get(field.en_name)?.errors?.['required']"
+                  >
+                    هذا الحقل مطلوب
+                  </div>
+                  <div
+                    *ngIf="previewForm.get(field.en_name)?.errors?.['minlength']"
+                  >
+                    يجب أن يحتوي على الأقل {{ field.min_length }} أحرف
+                  </div>
+                  <div
+                    *ngIf="previewForm.get(field.en_name)?.errors?.['maxlength']"
+                  >
+                    يجب ألا يتجاوز {{ field.max_length }} أحرف
+                  </div>
+                </div>
+              </div>
+
+              <!-- Select -->
+              <div class="mb-3" *ngIf="field.type === 'select'">
+                <label>
+                  {{ field.ar_name }} ({{ field.en_name }})
+                  <span class="text-danger" *ngIf="field.is_required">*</span>
+                </label>
+                <select
+                  class="form-control"
+                  [formControlName]="field.en_name"
+                  [disabled]="isSubmitting"
+                >
+                  <option value="">-- اختر --</option>
+                  <option *ngFor="let opt of field.options" [value]="opt">
+                    {{ opt }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Radio -->
+              <div class="mb-3" *ngIf="field.type === 'radio'">
+                <label>
+                  {{ field.ar_name }} ({{ field.en_name }})
+                  <span class="text-danger" *ngIf="field.is_required">*</span>
+                </label>
+                <div *ngFor="let opt of field.options" class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    [formControlName]="field.en_name"
+                    [value]="opt"
+                    [disabled]="isSubmitting"
+                  />
+                  <label class="form-check-label">{{ opt }}</label>
+                </div>
+              </div>
+
+              <!-- Checkbox -->
+              <div class="mb-3" *ngIf="field.type === 'checkbox'">
+                <label>
+                  {{ field.ar_name }} ({{ field.en_name }})
+                  <span class="text-danger" *ngIf="field.is_required">*</span>
+                </label>
+                <div *ngFor="let opt of field.options" class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    [formControlName]="field.en_name"
+                    [value]="opt"
+                    [disabled]="isSubmitting"
+                  />
+                  <label class="form-check-label">{{ opt }}</label>
+                </div>
+              </div>
+
+              <!-- Textarea -->
+              <div class="mb-3" *ngIf="field.type === 'textarea'">
+                <label>
+                  {{ field.ar_name }} ({{ field.en_name }})
+                  <span class="text-danger" *ngIf="field.is_required">*</span>
+                </label>
+                <textarea
+                  class="form-control"
+                  [formControlName]="field.en_name"
+                  rows="3"
+                  [attr.maxlength]="field.max_length || null"
+                  [disabled]="isSubmitting"
+                ></textarea>
+              </div>
+ 
+              <!-- File -->
+              <div class="mb-3" *ngIf="field.type === 'file'">
+                <label>
+                  {{ field.ar_name }} ({{ field.en_name }})
+                  <span class="text-danger" *ngIf="field.is_required">*</span>
+                </label>
+                <input
+                  type="file"
+                  class="form-control"
+                  [formControlName]="field.en_name"
+                  [disabled]="isSubmitting"
+                />
+              </div>
+
+              <!-- Date -->
+              <div class="mb-3" *ngIf="field.type === 'date'">
+                <label>
+                  {{ field.ar_name }} ({{ field.en_name }})
+                  <span class="text-danger" *ngIf="field.is_required">*</span>
+                </label>
+                <input
+                  type="date"
+                  class="form-control"
+                  [formControlName]="field.en_name"
+                  [disabled]="isSubmitting"
+                />
+              </div>
+            </div>
+
+
+          </form>
+        </div>
+      </div>
+
+      <!-- Submitted Data -->
+      <div class="card mt-3 shadow-sm border-0" *ngIf="submittedData">
+        <div class="card-header bg-info text-white">
+          <h5 class="mb-0">البيانات المرسلة</h5>
+        </div>
+        <div class="card-body">
+          <pre>{{ submittedData | json }}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,141 @@
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-gradient-primary text-white py-3">
+    <h5 class="m-0 pb-2 fw-semibold">
+      <i class="fas fa-plus-circle me-2"></i> Add New Category
+    </h5>
+  </div>
+
+  <div class="card-body">
+    <form #categoryForm="ngForm" (ngSubmit)="onSubmit(categoryForm)">
+      <!-- Parent Category Dropdown -->
+      <div class="mb-3">
+        <label class="form-label">Parent Category</label>
+        <select
+          class="form-select"
+          name="parent_id"
+          [(ngModel)]="category.parent_id"
+          #parentSelect
+          (change)="onParentChange()"
+        >
+          <option [value]="0">Main Category (No Parent)</option>
+          <ng-container
+            *ngTemplateOutlet="
+              categoryOptions;
+              context: { categories: categoriesTree, level: 0 }
+            "
+          ></ng-container>
+        </select>
+        <small class="text-muted">
+          Select "Main Category" if this is a top-level category
+        </small>
+      </div>
+
+      <!-- English Name -->
+      <div class="mb-3">
+        <label class="form-label">Category Name (English)</label>
+        <input
+          type="text"
+          class="form-control"
+          name="en_name"
+          [(ngModel)]="category.en_name"
+          required
+          placeholder="Enter English name"
+        />
+      </div>
+
+      <!-- Arabic Name -->
+      <div class="mb-3">
+        <label class="form-label">Category Name (Arabic)</label>
+        <input
+          type="text"
+          class="form-control"
+          name="ar_name"
+          [(ngModel)]="category.ar_name"
+          required
+          placeholder="Enter Arabic name"
+        />
+      </div>
+ 
+      <!-- Sort Order -->
+      <div class="mb-3">
+        <label class="form-label">Sort Order</label>
+        <input
+          type="number"
+          class="form-control"
+          name="sort_order"
+          [(ngModel)]="category.sort_order"
+          required
+          min="0"
+        />
+        <small class="text-muted">Lower numbers appear first</small>
+      </div>
+
+      <!-- Icon Upload -->
+      <div class="mb-3" *ngIf="!category.parent_id">
+        <label class="form-label">Category Icon</label>
+        <input
+          type="file"
+          class="form-control"
+          (change)="onIconSelected($event)"
+          accept="image/*"
+          name="icon"
+        />
+        <small class="text-muted"
+          >Recommended size: 25*25 pixels (PNG, JPG)</small
+        >
+      </div>
+
+      <!-- Status -->
+      <div class="mb-3">
+        <label class="form-label">Status</label>
+        <select class="form-select" name="state" [(ngModel)]="category.state">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          (click)="onReset()"
+        >
+          <i class="fas fa-undo me-1"></i> Reset
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="!categoryForm.valid || isSubmitting"
+        >
+          <span *ngIf="!isSubmitting">
+            <i class="fas fa-save me-1"></i> Save Category
+          </span>
+          <span *ngIf="isSubmitting">
+            <i class="fas fa-spinner fa-spin me-1"></i> Saving...
+          </span>
+        </button>
+      </div>
+    </form>
+
+    <!-- Recursive Template for Category Options -->
+    <ng-template #categoryOptions let-categories="categories" let-level="level">
+      <ng-container *ngFor="let cat of categories">
+        <option [value]="cat.id" [style.color]="getLevelColor(level)">
+          <span [innerHTML]="getLevelPrefix(level)"></span>
+          <!-- عرض الرموز -->
+          {{ cat.en_name }}
+          <span class="arabic-name">({{ cat.ar_name }})</span>
+        </option>
+        <ng-container *ngIf="cat.children && cat.children.length > 0">
+          <ng-container
+            *ngTemplateOutlet="
+              categoryOptions;
+              context: { categories: cat.children, level: level + 1 }
+            "
+          ></ng-container>
+        </ng-container>
+      </ng-container>
+    </ng-template>
+  </div>
+</div>

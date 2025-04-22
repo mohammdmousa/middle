@@ -1,0 +1,422 @@
+<div class="card shadow-sm border-0">
+  <!-- Card Header -->
+  <div class="card-header bg-gradient-primary text-white py-3">
+    <h5 class="m-0 pb-2 fw-semibold" style="width: 100% !important">
+      <i class="fas fa-users me-2"></i> المستخدمين
+    </h5>
+    <div class="custome d-flex justify-content-between align-items-center">
+      <div class="search-box">
+        <div class="input-group">
+          <input
+            type="text"
+            class="form-control border-start-0"
+            placeholder="بحث ..."
+            [(ngModel)]="searchTerm"
+            (input)="filterUsers()"
+          />
+          <span class="input-group-text bg-white border-end-0">
+            <i class="fas fa-search text-muted"></i>
+          </span>
+        </div>
+      </div>
+      <button class="btn btn-sm btn-light" (click)="openAddUserModal()">
+        <i class="fas fa-plus-circle me-1"></i> إضافة مستخدم
+      </button>
+    </div>
+  </div>
+
+  <!-- Users Table -->
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width: 80px">ID</th>
+            <th>الصورة</th>
+            <th>الاسم</th>
+            <th>الإيميل</th>
+            <th>الجنس</th>
+            <th>تاريخ الميلاد</th>
+            <th>الدولة</th>
+            <th>المدينة</th>
+            <th style="width: 150px">الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of filteredUsers">
+            <td class="fw-semibold">{{ user.id }}</td>
+            <td>
+              <img
+                *ngIf="user.photo"
+                style="width: 40px; height: 40px; object-fit: cover"
+                src="{{ url }}{{ user.photo }}"
+                alt="صورة المستخدم"
+                class="rounded-circle"
+              />
+              <span *ngIf="!user.photo">لا يوجد صورة</span>
+            </td>
+            <td>{{ user.name }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.gender === "male" ? "male" : "female" }}</td>
+            <td>{{ user.birthday | date : "yyyy/MM/dd" }}</td>
+            <td>{{ user.country?.en_name }}</td>
+            <td>{{ user.region?.en_name }}</td>
+            <td>
+              <div class="d-flex justify-content-around">
+                <button
+                  class="btn btn-sm btn-icon btn-outline-primary me-1"
+                  (click)="openEditUserModal(user)"
+                  title="تعديل"
+                >
+                  <i class="far fa-edit"></i>
+                </button>
+                <button
+                  class="btn btn-sm btn-icon btn-outline-danger"
+                  (click)="deleteUser(user.id)"
+                  title="حذف"
+                >
+                  <i class="far fa-trash-alt"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="card-footer d-flex justify-content-between align-items-center">
+    <div class="text-muted small">
+      عرض {{ (currentPage - 1) * itemsPerPage + 1 }} إلى
+      {{
+        currentPage * itemsPerPage > totalItems
+          ? totalItems
+          : currentPage * itemsPerPage
+      }}
+      من أصل {{ totalItems }} مستخدم
+    </div>
+
+    <nav aria-label="Page navigation">
+      <ul class="pagination mb-0">
+        <!-- زر السابق - نبقيه خارج ngFor -->
+        <li class="page-item" [class.disabled]="currentPage === 1">
+          <a
+            class="page-link"
+            href="javascript:void(0)"
+            (click)="goToPage('prev')"
+          >
+            << Previous
+          </a>
+        </li>
+
+        <!-- الأزرار العددية فقط من links -->
+        <ng-container *ngFor="let link of links">
+          <li
+            *ngIf="isNumericLink(link)"
+            class="page-item"
+            [class.active]="link.active"
+            [class.disabled]="link.url === null"
+          >
+            <a
+              class="page-link"
+              href="javascript:void(0)"
+              (click)="goToPage(link.label)"
+            >
+              {{ link.label }}
+            </a>
+          </li>
+        </ng-container>
+
+        <!-- زر التالي - نبقيه خارج ngFor -->
+        <li class="page-item" [class.disabled]="currentPage === lastPage">
+          <a
+            class="page-link"
+            href="javascript:void(0)"
+            (click)="goToPage('next')"
+          >
+            Next >>
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<!-- Export to Excel Button -->
+<button class="btn btn-primary mt-3" (click)="exportToExcel()">
+  <i class="fas fa-file-excel me-2"></i> تصدير إلى إكسل
+</button>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">إضافة مستخدم جديد</h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form #userForm="ngForm" (ngSubmit)="addUser(userForm)">
+          <div class="mb-3">
+            <label class="form-label">الاسم *</label>
+            <input
+              type="text"
+              class="form-control"
+              name="name"
+              [(ngModel)]="newUser.name"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">الإيميل *</label>
+            <input
+              type="email"
+              class="form-control"
+              name="email"
+              [(ngModel)]="newUser.email"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">كلمة المرور *</label>
+            <input
+              type="password"
+              class="form-control"
+              name="password"
+              [(ngModel)]="newUser.password"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">الجنس</label>
+            <select
+              class="form-select"
+              name="gender"
+              [(ngModel)]="newUser.gender"
+            >
+              <option value="male">male</option>
+              <option value="female">female</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">تاريخ الميلاد</label>
+            <input
+              type="date"
+              class="form-control"
+              name="birthday"
+              [(ngModel)]="newUser.birthday"
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">الدولة</label>
+            <select
+              class="form-select"
+              name="country_id"
+              [(ngModel)]="newUser.country_id"
+              (change)="onCountryChange(newUser.country_id)"
+            >
+              <option value="">اختر الدولة</option>
+              <option *ngFor="let country of countries" [value]="country.id">
+                {{ country.en_name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">المدينة</label>
+            <select
+              class="form-select"
+              name="city_id"
+              [(ngModel)]="newUser.region_id"
+              [disabled]="!newUser.country_id"
+            >
+              <option value="">اختر المدينة</option>
+              <option *ngFor="let city of cities" [value]="city.id">
+                {{ city.en_name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">صورة المستخدم</label>
+            <input
+              type="file"
+              class="form-control"
+              (change)="onAvatarSelected($event)"
+              accept="image/*"
+              name="photo"
+            />
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              إغلاق
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="!userForm.valid"
+            >
+              حفظ
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">تعديل المستخدم</h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form #editUserForm="ngForm" (ngSubmit)="saveEditUser(editUserForm)">
+          <div class="mb-3">
+            <label class="form-label">الاسم *</label>
+            <input
+              type="text"
+              class="form-control"
+              name="name"
+              [(ngModel)]="editUser.name"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">الإيميل *</label>
+            <input
+              type="email"
+              class="form-control"
+              name="email"
+              [(ngModel)]="editUser.email"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label"
+              >كلمة المرور الجديدة (اتركها فارغة للحفاظ على الحالية)</label
+            >
+            <input
+              type="password"
+              class="form-control"
+              name="password"
+              [(ngModel)]="editUser.password"
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">الجنس</label>
+            <select
+              class="form-select"
+              name="gender"
+              [(ngModel)]="editUser.gender"
+            >
+              <option value="male">male</option>
+              <option value="female">female</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">تاريخ الميلاد</label>
+            <input
+              type="date"
+              class="form-control"
+              name="birth_date"
+              [(ngModel)]="editUser.birthday"
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">الدولة</label>
+            <select
+              class="form-select"
+              name="country_id"
+              [(ngModel)]="editUser.country_id"
+              (change)="onCountryChange(editUser.country_id, true)"
+            >
+              <option value="">اختر الدولة</option>
+              <option *ngFor="let country of countries" [value]="country.id">
+                {{ country.en_name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">المدينة</label>
+            <select
+              class="form-select"
+              name="region_id"
+              [(ngModel)]="editUser.region_id"
+            >
+              <option value="">اختر المدينة</option>
+              <option *ngFor="let city of cities" [value]="city.id">
+                {{ city.en_name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">تغيير الصورة</label>
+            <input
+              type="file"
+              class="form-control"
+              (change)="onEditAvatarSelected($event)"
+              accept="image/*"
+              name="photo"
+            />
+            <small class="text-muted"
+              >الصورة الحالية:
+              <img
+                style="width: 25px"
+                src="{{ url }}{{ editUser.photo }}"
+                alt=""
+            /></small>
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              إغلاق
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="!editUserForm.valid"
+            >
+              حفظ التغييرات
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

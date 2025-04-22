@@ -1,0 +1,189 @@
+<div class="card shadow-sm border-0">
+  <!-- Card Header -->
+  <div class="card-header bg-gradient-primary text-white py-3">
+    <h5 class="m-0 pb-2 fw-semibold" style="width: 100% !important">
+      <i class="fas fa-chart-bar me-2"></i> Company Statistics
+    </h5>
+    <div class="custome d-flex justify-content-between align-items-center">
+      <div class="search-box">
+        <div class="input-group">
+          <input
+            type="text"
+            class="form-control border-start-0"
+            placeholder="Search company..."
+            [(ngModel)]="searchTerm"
+            (input)="filterCompanies()"
+          />
+          <span class="input-group-text bg-white border-end-0">
+            <i class="fas fa-search text-muted"></i>
+          </span>
+        </div>
+      </div>
+      <div class="d-flex">
+        <div class="input-group me-2" style="width: 200px">
+          <span class="input-group-text">From</span>
+          <input
+            type="date"
+            class="form-control"
+            [(ngModel)]="dateFrom"
+            (change)="filterByDate()"
+          />
+        </div>
+        <div class="input-group" style="width: 200px">
+          <span class="input-group-text">To</span>
+          <input
+            type="date"
+            class="form-control"
+            [(ngModel)]="dateTo"
+            (change)="filterByDate()"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="card-body">
+    <div class="row mb-4">
+      <!-- Total Companies Card -->
+      <div class="col-md-3 mb-3">
+        <div class="card border-primary h-100">
+          <div class="card-body text-center">
+            <h5 class="card-title text-primary">
+              <i class="fas fa-building me-2"></i>Total Companies
+            </h5>
+            <p class="card-text display-4">{{ totalCompanies }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Companies Card -->
+      <div class="col-md-3 mb-3">
+        <div class="card border-success h-100">
+          <div class="card-body text-center">
+            <h5 class="card-title text-success">
+              <i class="fas fa-check-circle me-2"></i>Active Companies
+            </h5>
+            <p class="card-text display-4">{{ activeCompanies }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Jobs Posted Card -->
+      <div class="col-md-3 mb-3">
+        <div class="card border-info h-100">
+          <div class="card-body text-center">
+            <h5 class="card-title text-info">
+              <i class="fas fa-briefcase me-2"></i>Total Jobs Posted
+            </h5>
+            <p class="card-text display-4">{{ totalJobs }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Applications Card -->
+      <div class="col-md-3 mb-3">
+        <div class="card border-warning h-100">
+          <div class="card-body text-center">
+            <h5 class="card-title text-warning">
+              <i class="fas fa-file-alt me-2"></i>Total Applications
+            </h5>
+            <p class="card-text display-4">{{ totalApplications }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Company Statistics Table -->
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Company</th>
+            <th>Active Jobs</th>
+            <th>Pending Jobs</th>
+            <th>Applications</th>
+            <th>Views</th>
+            <th>Shares</th>
+            <th>Last Activity</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let company of getPaginatedCompanies()">
+            <td>
+              <div class="d-flex align-items-center">
+                <img
+                  *ngIf="company.logo"
+                  [src]="url + company.logo"
+                  alt="Logo"
+                  class="rounded-circle me-2"
+                  style="width: 30px; height: 30px; object-fit: contain"
+                />
+                {{ company.en_name }}
+              </div>
+            </td>
+            <td>{{ company.stats?.active_jobs || 0 }}</td>
+            <td>{{ company.stats?.pending_jobs || 0 }}</td>
+            <td>{{ company.stats?.applications || 0 }}</td>
+            <td>{{ company.stats?.views || 0 }}</td>
+            <td>{{ company.stats?.shares || 0 }}</td>
+            <td>{{ company.stats?.last_activity | date : "mediumDate" }}</td>
+            <td>
+              <button
+                class="btn btn-sm btn-outline-primary"
+                (click)="viewDetails(company.id)"
+              >
+                <i class="fas fa-eye me-1"></i> View
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="card-footer d-flex justify-content-center">
+    <nav aria-label="Page navigation">
+      <ul class="pagination">
+        <li class="page-item" [class.disabled]="currentPage === 1">
+          <a
+            class="page-link"
+            href="javascript:void(0)"
+            (click)="currentPage = currentPage - 1"
+          >
+            Previous
+          </a>
+        </li>
+        <li
+          class="page-item"
+          *ngFor="let page of getPageNumbers()"
+          [class.active]="page === currentPage"
+        >
+          <a
+            class="page-link"
+            href="javascript:void(0)"
+            (click)="currentPage = page"
+          >
+            {{ page }}
+          </a>
+        </li>
+        <li class="page-item" [class.disabled]="currentPage === totalPages">
+          <a
+            class="page-link"
+            href="javascript:void(0)"
+            (click)="currentPage = currentPage + 1"
+          >
+            Next
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<!-- Export to Excel Button -->
+<button class="btn btn-primary mt-3" (click)="exportToExcel()">
+  <i class="fas fa-file-excel me-1"></i> Export to Excel
+</button>

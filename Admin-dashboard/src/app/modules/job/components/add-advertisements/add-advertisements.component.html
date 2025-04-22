@@ -1,0 +1,413 @@
+<form [formGroup]="adForm" (ngSubmit)="onSubmit()" class="container mt-4">
+  <div class="card">
+    <div class="card-header bg-primary text-white">
+      <h3 class="mb-0">إضافة إعلان جديد</h3>
+    </div>
+    <div class="card-body">
+      <!-- Basic Information Section -->
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="country_id">الدولة</label>
+            <select
+              id="country_id"
+              formControlName="country_id"
+              class="form-control"
+              (change)="onCountryChange()"
+            >
+              <option value="">اختر الدولة</option>
+              <option *ngFor="let country of countries" [value]="country.id">
+                {{ country.ar_name }} ({{ country.en_name }})
+              </option>
+            </select>
+            <small
+              *ngIf="
+                adForm.get('country_id')?.invalid &&
+                adForm.get('country_id')?.touched
+              "
+              class="text-danger"
+            >
+              هذا الحقل مطلوب
+            </small>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="region_id">المدينة</label>
+            <select
+              id="region_id"
+              formControlName="region_id"
+              class="form-control"
+              [disabled]="!adForm.get('country_id')?.value"
+            >
+              <option value="">اختر المدينة</option>
+              <option *ngFor="let city of cities" [value]="city.id">
+                {{ city.ar_name }} ({{ city.en_name }})
+              </option>
+            </select>
+            <small
+              *ngIf="
+                adForm.get('region_id')?.invalid &&
+                adForm.get('region_id')?.touched
+              "
+              class="text-danger"
+            >
+              هذا الحقل مطلوب
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="advertiser_type">نوع المعلن</label>
+            <select
+              id="advertiser_type"
+              formControlName="advertiser_type"
+              class="form-control"
+            >
+              <option value="user">فرد</option>
+              <option value="company">شركة</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="advertiser_id">{{
+              isUserType ? "المستخدم" : "الشركة"
+            }}</label>
+            <select
+              id="advertiser_id"
+              formControlName="advertiser_id"
+              class="form-control"
+            >
+              <option value="">
+                اختر {{ isUserType ? "مستخدم" : "شركة" }}
+              </option>
+              <ng-container *ngIf="isUserType; else companyOptions">
+                <option *ngFor="let user of users" [value]="user.id">
+                  {{ user.name }}
+                </option>
+              </ng-container>
+              <ng-template #companyOptions>
+                <option *ngFor="let company of companies" [value]="company.id">
+                  {{ company.ar_name || company.en_name }}
+                </option>
+              </ng-template>
+            </select>
+            <small
+              *ngIf="
+                adForm.get('advertiser_id')?.invalid &&
+                adForm.get('advertiser_id')?.touched
+              "
+              class="text-danger"
+            >
+              هذا الحقل مطلوب
+            </small>
+          </div>
+        </div> -->
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="publisher_type">نوع الناشر</label>
+            <select
+              id="publisher_type"
+              formControlName="publisher_type"
+              class="form-control"
+            >
+              <option value="user">فرد</option>
+              <option value="company">شركة</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="publisher_id">{{
+              isPublisherUserType ? "المستخدم الناشر" : "الشركة الناشرة"
+            }}</label>
+            <select
+              id="publisher_id"
+              formControlName="publisher_id"
+              class="form-control"
+            >
+              <option value="">
+                اختر {{ isPublisherUserType ? "مستخدم" : "شركة" }}
+              </option>
+              <ng-container
+                *ngIf="isPublisherUserType; else publisherCompanyOptions"
+              >
+                <option *ngFor="let user of publisherUsers" [value]="user.id">
+                  {{ user.name }}
+                </option>
+              </ng-container>
+              <ng-template #publisherCompanyOptions>
+                <option
+                  *ngFor="let company of publisherCompanies"
+                  [value]="company.id"
+                >
+                  {{ company.ar_name || company.en_name }}
+                </option>
+              </ng-template>
+            </select>
+            <small
+              *ngIf="
+                adForm.get('publisher_id')?.invalid &&
+                adForm.get('publisher_id')?.touched
+              "
+              class="text-danger"
+            >
+              هذا الحقل مطلوب
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Location Section -->
+      <div class="row">
+        <div class="col-12 mb-3">
+          <div class="form-group">
+            <label>تحديد الموقع على الخريطة</label>
+            <div
+              id="map"
+              style="
+                height: 400px;
+                width: 100%;
+                border-radius: 8px;
+                border: 1px solid #ddd;
+              "
+            ></div>
+            <small class="text-muted"
+              >انقر على الخريطة لتحديد الموقع أو اسحب العلامة</small
+            >
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>الإحداثيات</label>
+            <div class="input-group">
+              <span class="input-group-text">Lat</span>
+              <input
+                type="text"
+                class="form-control"
+                [value]="adForm.get('latitude')?.value"
+                readonly
+              />
+              <span class="input-group-text">Lng</span>
+              <input
+                type="text"
+                class="form-control"
+                [value]="adForm.get('longitude')?.value"
+                readonly
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category Section -->
+      <div class="row">
+        <div class="col-12">
+          <div class="form-group">
+            <label for="category_id">الفئة</label>
+            <select
+              id="category_id"
+              formControlName="category_id"
+              class="form-control"
+              (change)="onCategorySelect()"
+            >
+              <option value="">اختر الفئة</option>
+              <option
+                *ngFor="let cat of flattenCategories(categoriesTree)"
+                [value]="cat.id"
+              >
+                {{ getCategoryPrefix(cat.level) }} {{ cat.ar_name }}
+              </option>
+            </select>
+            <small
+              *ngIf="
+                adForm.get('category_id')?.invalid &&
+                adForm.get('category_id')?.touched
+              "
+              class="text-danger"
+            >
+              هذا الحقل مطلوب
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dynamic Fields Section -->
+      <div *ngIf="formFields.length > 0" class="dynamic-fields-section mt-4">
+        <h4 class="mb-3">الحقول الإضافية</h4>
+
+        <div class="row">
+          <div *ngFor="let field of formFields" class="col-md-6">
+            <div class="form-group">
+              <label [for]="field.en_name"
+                >{{ field.ar_name }}
+                <span *ngIf="field.is_required" class="text-danger">*</span>
+              </label>
+
+              <!-- Text Input -->
+              <input
+                *ngIf="field.type === 'text' || field.type === 'number'"
+                [type]="field.type"
+                [id]="field.en_name"
+                [formControlName]="field.en_name"
+                class="form-control"
+                [attr.minlength]="field.min_length"
+                [attr.maxlength]="field.max_length"
+              />
+
+              <!-- Textarea -->
+              <textarea
+                *ngIf="field.type === 'textarea'"
+                [id]="field.en_name"
+                [formControlName]="field.en_name"
+                class="form-control"
+                [attr.minlength]="field.min_length"
+                [attr.maxlength]="field.max_length"
+              ></textarea>
+
+              <!-- Select -->
+              <select
+                *ngIf="field.type === 'select'"
+                [id]="field.en_name"
+                [formControlName]="field.en_name"
+                class="form-control"
+              >
+                <option value="">اختر {{ field.ar_name }}</option>
+                <option *ngFor="let option of field.options" [value]="option">
+                  {{ option }}
+                </option>
+              </select>
+
+              <!-- Radio Buttons -->
+              <div *ngIf="field.type === 'radio'" class="radio-group">
+                <div *ngFor="let option of field.options" class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    [id]="field.en_name + option"
+                    [formControlName]="field.en_name"
+                    [value]="option"
+                  />
+                  <label
+                    class="form-check-label"
+                    [for]="field.en_name + option"
+                    >{{ option }}</label
+                  >
+                </div>
+              </div>
+
+              <!-- Checkbox -->
+              <div *ngIf="field.type === 'checkbox'" class="checkbox-group">
+                <div *ngFor="let option of field.options" class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    [id]="field.en_name + option"
+                    [value]="option"
+                    (change)="onCheckboxChange(field.en_name, option, $event)"
+                    [checked]="
+                      currentCheckboxValues[field.en_name].includes(option)
+                    "
+                  />
+                  <label
+                    class="form-check-label"
+                    [for]="field.en_name + option"
+                    >{{ option }}</label
+                  >
+                </div>
+              </div>
+              <div *ngIf="field.type === 'file'" class="form-group">
+                <input
+                  type="file"
+                  [id]="field.en_name"
+                  class="form-control"
+                  (change)="onFileChange($event, field.en_name)"
+                  [multiple]="field.multiple"
+                />
+                <small
+                  *ngIf="
+                    adForm.get(field.en_name)?.touched &&
+                    adForm.get(field.en_name)?.invalid
+                  "
+                  class="text-danger"
+                >
+                  هذا الحقل مطلوب
+                </small>
+              </div>
+
+              <!-- Date Input -->
+              <div *ngIf="field.type === 'date'" class="form-group">
+                <label [for]="field.en_name"
+                  >{{ field.ar_name }}
+                  <span *ngIf="field.is_required" class="text-danger">*</span>
+                </label>
+                <input
+                  type="date"
+                  [id]="field.en_name"
+                  [formControlName]="field.en_name"
+                  class="form-control"
+                />
+                <small
+                  *ngIf="
+                    adForm.get(field.en_name)?.touched &&
+                    adForm.get(field.en_name)?.invalid
+                  "
+                  class="text-danger"
+                >
+                  هذا الحقل مطلوب
+                </small>
+              </div>
+              <!-- Validation Messages -->
+              <small
+                *ngIf="
+                  adForm.get(field.en_name)?.invalid &&
+                  adForm.get(field.en_name)?.touched
+                "
+                class="text-danger"
+              >
+                <span *ngIf="adForm.get(field.en_name)?.errors?.['required']"
+                  >هذا الحقل مطلوب</span
+                >
+                <span *ngIf="adForm.get(field.en_name)?.errors?.['pattern']"
+                  >يجب إدخال رقم صحيح</span
+                >
+                <span *ngIf="adForm.get(field.en_name)?.errors?.['minlength']">
+                  يجب أن يحتوي على الأقل {{ field.min_length }} أحرف
+                </span>
+                <span *ngIf="adForm.get(field.en_name)?.errors?.['maxlength']">
+                  يجب ألا يتجاوز {{ field.max_length }} أحرف
+                </span>
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="form-group text-center mt-4">
+        <button
+          type="submit"
+          class="btn btn-primary btn-lg"
+          [disabled]="isLoading"
+        >
+          <span
+            *ngIf="isLoading"
+            class="spinner-border spinner-border-sm"
+            role="status"
+            aria-hidden="true"
+          ></span>
+          {{ isLoading ? "جاري الحفظ..." : "إضافة الإعلان" }}
+        </button>
+      </div>
+    </div>
+  </div>
+</form>

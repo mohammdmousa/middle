@@ -1,0 +1,86 @@
+/* تنسيقات عامة للبطاقة */
+.card {
+  max-width: 800px;
+  margin: 0 auto;
+  box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.card-header {
+  border-radius: 0.35rem 0.35rem 0 0 !important;
+}
+
+option {
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  padding: 5px;
+}
+
+/* تخصيص الخلفيات بناءً على المستوى */
+option.level-dynamic {
+  background-color: #f9f9f9;
+}
+
+/* تأثير Hover */
+option:hover {
+  background-color: #d1e7fd;
+  cursor: pointer;
+}
+
+/* نص عربي */
+.arabic-name {
+  font-style: italic;
+  color: #6c757d;
+  margin-left: 5px;
+}
+
+/* نص عربي */
+.arabic-name {
+  font-style: italic;
+  color: #6c757d;
+  margin-left: 5px;
+}
+/* أيقونات المستويات */
+.tree-icon {
+  margin-right: 8px;
+  color: #6c757d;
+  font-size: 12px;
+}
+
+/* تحسين مظهر القائمة المنسدلة */
+.form-select {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 0.5rem 0.75rem;
+}
+
+/* تنسيق النص العربي */
+.arabic-name {
+  font-size: 12px;
+  color: #6c757d;
+  margin-right: 5px;
+}
+
+/* تنسيقات الأزرار */
+.btn {
+  padding: 0.5rem 1.25rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background-color: #4e73df;
+  border-color: #4e73df;
+}
+
+.btn-primary:hover {
+  background-color: #3a5ec0;
+  border-color: #3a5ec0;
+}
+
+.btn-outline-secondary {
+  border-color: #d1d3e2;
+}
+
+.btn-outline-secondary:hover {
+  background-color: #f8f9fa;
+}

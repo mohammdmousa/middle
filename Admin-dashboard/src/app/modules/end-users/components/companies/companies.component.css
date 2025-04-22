@@ -1,0 +1,31 @@
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-active {
+  background-color: #e6f7ee;
+  color: #28a745;
+}
+
+.status-inactive {
+  background-color: #fef0f0;
+  color: #dc3545;
+}
+
+.table th {
+  white-space: nowrap;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.icon-img {
+  max-width: 25px;
+  max-height: 25px;
+  object-fit: contain;
+}

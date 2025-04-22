@@ -1,0 +1,114 @@
+<div class="rich-text-editor-container">
+  <!-- شريط الأدوات -->
+  <div class="editor-toolbar">
+    <button
+      type="button"
+      class="toolbar-btn"
+      (click)="execCommand('bold')"
+      title="عريض"
+    >
+      <i class="fas fa-bold"></i>
+    </button>
+    <button
+      type="button"
+      class="toolbar-btn"
+      (click)="execCommand('italic')"
+      title="مائل"
+    >
+      <i class="fas fa-italic"></i>
+    </button>
+    <button
+      type="button"
+      class="toolbar-btn"
+      (click)="execCommand('underline')"
+      title="تحته خط"
+    >
+      <i class="fas fa-underline"></i>
+    </button>
+
+    <div class="toolbar-separator"></div>
+
+    <button
+      type="button"
+      class="toolbar-btn"
+      (click)="execCommand('insertUnorderedList')"
+      title="قائمة نقطية"
+    >
+      <i class="fas fa-list-ul"></i>
+    </button>
+    <button
+      type="button"
+      class="toolbar-btn"
+      (click)="execCommand('insertOrderedList')"
+      title="قائمة رقمية"
+    >
+      <i class="fas fa-list-ol"></i>
+    </button>
+
+    <div class="toolbar-separator"></div>
+
+    <!-- ألوان النص -->
+    <div class="toolbar-dropdown">
+      <button type="button" class="toolbar-btn" title="لون النص">
+        <i class="fas fa-palette"></i>
+      </button>
+      <div class="dropdown-content colors">
+        <div
+          *ngFor="let color of colors"
+          class="color-option"
+          [style.background]="color"
+          (click)="execCommand('foreColor', color)"
+          [title]="color"
+        ></div>
+      </div>
+    </div>
+
+    <!-- أحجام الخط -->
+    <div class="toolbar-dropdown">
+      <button type="button" class="toolbar-btn" title="حجم الخط">
+        <i class="fas fa-text-height"></i>
+      </button>
+      <div class="dropdown-content sizes">
+        <button
+          *ngFor="let size of fontSizes"
+          class="dropdown-item"
+          (click)="execCommand('fontSize', size.value)"
+        >
+          {{ size.name }}
+        </button>
+      </div>
+    </div>
+
+    <div class="toolbar-separator"></div>
+
+    <button
+      type="button"
+      class="toolbar-btn"
+      (click)="toggleRtl()"
+      title="تغيير الاتجاه"
+    >
+      <i class="fas fa-text-width"></i>
+    </button>
+
+    <button
+      type="button"
+      class="toolbar-btn"
+      title="مسح التنسيق"
+      (click)="clearFormatting()"
+    >
+      <i class="fas fa-eraser"></i>
+    </button>
+  </div>
+
+  <!-- منطقة المحرر -->
+  <div
+    #editor
+    class="editor-content"
+    [contentEditable]="!disabled"
+    (input)="onContentChange($event)"
+    [innerHTML]="value"
+    [attr.placeholder]="placeholder"
+    [style.direction]="'rtl'"
+    [style.text-align]="'right'"
+  ></div>
+</div>

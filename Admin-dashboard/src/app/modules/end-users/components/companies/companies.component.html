@@ -1,0 +1,484 @@
+<div class="card shadow-sm border-0">
+  <!-- Card Header -->
+  <div class="card-header bg-gradient-primary text-white py-3">
+    <h5 class="m-0 pb-2 fw-semibold" style="width: 100% !important">
+      <i class="fas fa-building me-2"></i> Companies
+    </h5>
+    <div class="custome d-flex justify-content-between align-items-center">
+      <div class="search-box">
+        <div class="input-group">
+          <input
+            type="text"
+            class="form-control border-start-0"
+            placeholder="Search ..."
+            [(ngModel)]="searchTerm"
+            (input)="filterCompanies()"
+          />
+          <span class="input-group-text bg-white border-end-0">
+            <i class="fas fa-search text-muted"></i>
+          </span>
+        </div>
+      </div>
+      <button class="btn btn-sm btn-light" (click)="openAddCompanyModal()">
+        <i class="fas fa-plus-circle me-1"></i> Add Company
+      </button>
+    </div>
+  </div>
+
+  <!-- Companies Table -->
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width: 80px">ID</th>
+            <th>Logo</th>
+            <th>Name (EN)</th>
+            <th>Name (AR)</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Country</th>
+            <th>Region</th>
+            <th>Commercial File</th>
+            <th style="width: 120px">Status</th>
+            <th style="width: 150px">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let company of getPaginatedCompanies()">
+            <td class="fw-semibold">{{ company.id }}</td>
+            <td>
+              <img
+                *ngIf="company.logo"
+                style="width: 40px; height: 40px; object-fit: contain"
+                src="{{ url }}{{ company.logo }}"
+                alt="Logo"
+                class="rounded-circle"
+              />
+              <span *ngIf="!company.logo">No Logo</span>
+            </td>
+            <td>{{ company.en_name }}</td>
+            <td>{{ company.ar_name }}</td>
+            <td>{{ company.email }}</td>
+            <td>{{ company.phone }}</td>
+            <td>{{ company.country?.en_name }}</td>
+            <td>{{ company.region?.en_name }}</td>
+            <td>
+              <a
+                *ngIf="company.trade_log"
+                href="{{ url }}{{ company.trade_log }}"
+                target="_blank"
+                class="btn btn-sm btn-outline-primary"
+              >
+                View File
+              </a>
+              <span *ngIf="!company.trade_log">No File</span>
+            </td>
+            <td>
+              <span
+                class="status-badge"
+                [class.status-active]="company.state === 'active'"
+                [class.status-inactive]="company.state === 'inactive'"
+              >
+                {{ company.state }}
+              </span>
+              <button
+                class="btn btn-sm btn-link"
+                (click)="toggleCompanyState(company.id)"
+                title="Toggle State"
+              >
+                <i class="fas fa-sync-alt"></i>
+              </button>
+            </td>
+            <td>
+              <div class="d-flex justify-content-around">
+                <button
+                  class="btn btn-sm btn-icon btn-outline-primary me-1"
+                  (click)="openEditCompanyModal(company)"
+                  title="Edit"
+                >
+                  <i class="far fa-edit"></i>
+                </button>
+                <button
+                  class="btn btn-sm btn-icon btn-outline-danger"
+                  (click)="deleteCompany(company.id)"
+                  title="Delete"
+                >
+                  <i class="far fa-trash-alt"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="card-footer d-flex justify-content-center">
+    <nav aria-label="Page navigation">
+      <ul class="pagination">
+        <li class="page-item" [class.disabled]="currentPage === 1">
+          <a
+            class="page-link"
+            href="javascript:void(0)"
+            (click)="currentPage = currentPage - 1"
+          >
+            Previous
+          </a>
+        </li>
+        <li
+          class="page-item"
+          *ngFor="let page of getPageNumbers()"
+          [class.active]="page === currentPage"
+        >
+          <a
+            class="page-link"
+            href="javascript:void(0)"
+            (click)="currentPage = page"
+          >
+            {{ page }}
+          </a>
+        </li>
+        <li class="page-item" [class.disabled]="currentPage === totalPages">
+          <a
+            class="page-link"
+            href="javascript:void(0)"
+            (click)="currentPage = currentPage + 1"
+          >
+            Next
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<!-- Export to Excel Button -->
+<button class="btn btn-primary mt-3" (click)="exportToExcel()">
+  <i class="fas fa-file-excel me-2"></i> Export to Excel
+</button>
+
+<!-- Add Company Modal -->
+<div class="modal fade" id="addCompanyModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Add New Company</h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form #companyForm="ngForm" (ngSubmit)="addCompany(companyForm)">
+          <div class="mb-3">
+            <label class="form-label">English Name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="en_name"
+              [(ngModel)]="newCompany.en_name"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Arabic Name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="ar_name"
+              [(ngModel)]="newCompany.ar_name"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input
+              type="email"
+              class="form-control"
+              name="email"
+              [(ngModel)]="newCompany.email"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input
+              type="password"
+              class="form-control"
+              name="password"
+              [(ngModel)]="newCompany.password"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Phone</label>
+            <input
+              type="text"
+              class="form-control"
+              name="phone"
+              [(ngModel)]="newCompany.phone"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Country</label>
+            <select
+              class="form-select"
+              name="country_id"
+              [(ngModel)]="newCompany.country_id"
+              (change)="onCountryChange(newCompany.country_id)"
+              required
+            >
+              <option value="">Select Country</option>
+              <option *ngFor="let country of countries" [value]="country.id">
+                {{ country.en_name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Region</label>
+            <select
+              class="form-select"
+              name="region_id"
+              [(ngModel)]="newCompany.region_id"
+              required
+              [disabled]="!newCompany.country_id"
+            >
+              <option value="">Select Region</option>
+              <option *ngFor="let region of regions" [value]="region.id">
+                {{ region.en_name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Logo</label>
+            <input
+              type="file"
+              class="form-control"
+              (change)="onLogoSelected($event)"
+              accept="image/*"
+              name="logo"
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Commercial File</label>
+            <input
+              type="file"
+              class="form-control"
+              (change)="onCommercialFileSelected($event)"
+              accept=".pdf,.doc,.docx"
+              name="commercial_file"
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Status</label>
+            <select
+              class="form-select"
+              name="state"
+              [(ngModel)]="newCompany.state"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="!companyForm.valid"
+            >
+              Save
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Company Modal -->
+<div class="modal fade" id="editCompanyModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Edit Company</h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form
+          #editCompanyForm="ngForm"
+          (ngSubmit)="saveEditCompany(editCompanyForm)"
+        >
+          <div class="mb-3">
+            <label class="form-label">English Name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="en_name"
+              [(ngModel)]="editCompany.en_name"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Arabic Name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="ar_name"
+              [(ngModel)]="editCompany.ar_name"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input
+              type="email"
+              class="form-control"
+              name="email"
+              [(ngModel)]="editCompany.email"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label"
+              >New Password (leave empty to keep current)</label
+            >
+            <input
+              type="password"
+              class="form-control"
+              name="password"
+              [(ngModel)]="editCompany.password"
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Phone</label>
+            <input
+              type="text"
+              class="form-control"
+              name="phone"
+              [(ngModel)]="editCompany.phone"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Country</label>
+            <select
+              class="form-select"
+              name="country_id"
+              [(ngModel)]="editCompany.country_id"
+              (change)="onCountryChange(editCompany.country_id, true)"
+              required
+            >
+              <option value="">Select Country</option>
+              <option *ngFor="let country of countries" [value]="country.id">
+                {{ country.en_name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Region</label>
+            <select
+              class="form-select"
+              name="region_id"
+              [(ngModel)]="newCompany.region_id"
+              required
+            >
+              <option value="">Select Region</option>
+              <option *ngFor="let region of regions" [value]="region.id">
+                {{ region.en_name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Change Logo</label>
+            <input
+              type="file"
+              class="form-control"
+              (change)="onEditLogoSelected($event)"
+              accept="image/*"
+              name="logo"
+            />
+            <small class="text-muted"
+              ><img style="width: 25px;" src="{{ url }}{{ editCompany.logo }}" alt=""
+            /></small>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Change Commercial File</label>
+            <input
+              type="file"
+              class="form-control"
+              (change)="onEditCommercialFileSelected($event)"
+              accept=".pdf,.doc,.docx"
+              name="commercial_file"
+            />
+            <small class="text-muted"
+              >Current:
+              {{ editCompany.currentCommercialFile || "No File" }}</small
+            >
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Status</label>
+            <select
+              class="form-select"
+              name="state"
+              [(ngModel)]="editCompany.state"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="!editCompanyForm.valid"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
