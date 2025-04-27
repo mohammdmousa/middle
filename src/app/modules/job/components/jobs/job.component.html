@@ -1,0 +1,518 @@
+<div class="card shadow-sm border-0">
+  <!-- Card Header -->
+  <div class="card-header bg-gradient-primary text-white py-3">
+    <div class="d-flex justify-content-between align-items-center">
+      <h5 class="m-0 pb-2 fw-semibold" style="width: 100% !important">
+        <i class="fas fa-list-alt me-2"></i> Categories
+      </h5>
+      <button class="btn btn-sm btn-light d-block" (click)="exportToExcel()">
+        <i class="fas fa-file-excel me-1"></i> Export To Excel
+      </button>
+    </div>
+    <div class="custome d-flex justify-content-between align-items-center">
+      <div class="search-box">
+        <div class="input-group">
+          <input
+            type="text"
+            class="form-control border-start-0"
+            placeholder="Search ..."
+            [(ngModel)]="searchTerm"
+            (input)="filterCategories()"
+          />
+          <span class="input-group-text bg-white border-end-0">
+            <i class="fas fa-search text-muted"></i>
+          </span>
+        </div>
+      </div>
+      <button class="btn btn-sm btn-light" (click)="openAddCategoryModal()">
+        <i class="fas fa-plus-circle me-1"></i> Add Category
+      </button>
+    </div>
+  </div>
+
+  <!-- Categories Table -->
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width: 50px" class="text-center"></th>
+            <th style="width: 80px">ID</th>
+            <th style="width: 80px">Icon</th>
+            <th>Name (EN)</th>
+            <th>Name (AR)</th>
+            <th style="width: 120px">Status</th>
+            <th style="width: 150px">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let category of getPaginatedCategories()">
+            <!-- Category Row -->
+            <tr [class.table-active]="isExpanded(category.id)">
+              <td class="text-center">
+                <button
+                  class="btn btn-icon btn-sm btn-outline-primary rounded-circle"
+                  (click)="toggleRow(category.id)"
+                  [attr.aria-expanded]="isExpanded(category.id)"
+                >
+                  <i
+                    class="fas fa-chevron-down"
+                    [class.rotate-icon]="isExpanded(category.id)"
+                  ></i>
+                </button>
+              </td>
+              <td class="fw-semibold">{{ category.id }}</td>
+              <td>
+                <img
+                  *ngIf="category.icon"
+                  style="width: 25px"
+                  src="{{ url }}{{ category.icon }}"
+                  alt="Icon"
+                  class="icon-img"
+                />
+                <span *ngIf="!category.icon">No Icon</span>
+              </td>
+              <td>{{ category.en_name }}</td>
+              <td>{{ category.ar_name }}</td>
+              <td>
+                <span
+                  class="status-badge"
+                  [class.status-active]="category.state === 'active'"
+                  [class.status-inactive]="category.state === 'inactive'"
+                >
+                  {{ category.state }}
+                </span>
+                <button
+                  class="btn btn-sm btn-link"
+                  (click)="toggleCategoryState(category.id)"
+                  title="Toggle State"
+                >
+                  <i class="fas fa-sync-alt"></i>
+                </button>
+              </td>
+              <td>
+                <div class="d-flex justify-content-around">
+                  <button
+                    class="btn btn-sm btn-icon btn-outline-primary me-1"
+                    (click)="openEditCategoryModal(category)"
+                    title="Edit"
+                  >
+                    <i class="far fa-edit"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-icon btn-outline-danger"
+                    (click)="deleteCategory(category.id)"
+                    title="Delete"
+                  >
+                    <i class="far fa-trash-alt"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Subcategories Row -->
+            <tr *ngIf="isExpanded(category.id)" class="bg-light">
+              <td colspan="7" class="p-0 border-top-0">
+                <div class="p-3">
+                  <div
+                    class="d-flex justify-content-between align-items-center mb-3"
+                  >
+                    <h6 class="m-0 fw-semibold text-primary">
+                      <i class="fas fa-list-ul me-2"></i>
+                      Subcategories of {{ category.en_name }}
+                    </h6>
+                    <button
+                      class="btn btn-sm btn-primary"
+                      (click)="openAddSubcategoryModal(category.id)"
+                    >
+                      <i class="fas fa-plus-circle me-1"></i> Add Subcategory
+                    </button>
+                  </div>
+                  <div class="table-responsive">
+                    <table
+                      class="table table-sm table-striped table-hover mb-0"
+                    >
+                      <thead>
+                        <tr class="table-primary">
+                          <th style="width: 80px">ID</th>
+                          <th>Name (EN)</th>
+                          <th>Name (AR)</th>
+                          <th style="width: 120px">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let subcategory of category.subcategories">
+                          <td class="fw-semibold">{{ subcategory.id }}</td>
+                          <td>{{ subcategory.en_name }}</td>
+                          <td>{{ subcategory.ar_name }}</td>
+                          <td>
+                            <div class="d-flex justify-content-around">
+                              <button
+                                class="btn btn-sm btn-icon btn-outline-primary me-1"
+                                (click)="
+                                  openEditSubcategoryModal(
+                                    subcategory,
+                                    category.id
+                                  )
+                                "
+                                title="Edit"
+                              >
+                                <i class="far fa-edit"></i>
+                              </button>
+                              <button
+                                class="btn btn-sm btn-icon btn-outline-danger"
+                                (click)="
+                                  deleteSubcategory(subcategory.id, category.id)
+                                "
+                                title="Delete"
+                              >
+                                <i class="far fa-trash-alt"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="card-footer d-flex justify-content-center">
+    <nav aria-label="Page navigation">
+      <ul class="pagination">
+        <li class="page-item" [class.disabled]="currentPage === 1">
+          <a
+            class="page-link"
+            href="javascript:void(0)"
+            (click)="currentPage = currentPage - 1"
+          >
+            Previous
+          </a>
+        </li>
+        <li
+          class="page-item"
+          *ngFor="let page of getPageNumbers()"
+          [class.active]="page === currentPage"
+        >
+          <a
+            class="page-link"
+            href="javascript:void(0)"
+            (click)="currentPage = page"
+          >
+            {{ page }}
+          </a>
+        </li>
+        <li class="page-item" [class.disabled]="currentPage === totalPages">
+          <a
+            class="page-link"
+            href="javascript:void(0)"
+            (click)="currentPage = currentPage + 1"
+          >
+            Next
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
+
+<!-- Add Category Modal -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Add New Category</h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form #categoryForm="ngForm" (ngSubmit)="addCategory(categoryForm)">
+          <div class="mb-3">
+            <label class="form-label">English Name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="en_name"
+              [(ngModel)]="newCategory.en_name"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Arabic Name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="ar_name"
+              [(ngModel)]="newCategory.ar_name"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Icon</label>
+            <input
+              type="file"
+              class="form-control"
+              (change)="onIconSelected($event)"
+              accept="image/*"
+              name="icon"
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Status</label>
+            <select
+              class="form-select"
+              name="state"
+              [(ngModel)]="newCategory.state"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="!categoryForm.valid"
+            >
+              Save
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Category Modal -->
+<div class="modal fade" id="editCategoryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Edit Category</h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form
+          #editCategoryForm="ngForm"
+          (ngSubmit)="saveEditCategory(editCategoryForm)"
+        >
+          <div class="mb-3">
+            <label class="form-label">English Name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="en_name"
+              [(ngModel)]="editCategory.en_name"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Arabic Name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="ar_name"
+              [(ngModel)]="editCategory.ar_name"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Change Icon</label>
+            <input
+              type="file"
+              class="form-control"
+              (change)="onEditIconSelected($event)"
+              accept="image/*"
+              name="icon"
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Status</label>
+            <select
+              class="form-select"
+              name="state"
+              [(ngModel)]="editCategory.state"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="!editCategoryForm.valid"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Subcategory Modal -->
+<div
+  class="modal fade"
+  id="addSubcategoryModal"
+  tabindex="-1"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Add New Subcategory</h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form
+          #subcategoryForm="ngForm"
+          (ngSubmit)="addSubcategory(subcategoryForm)"
+        >
+          <div class="mb-3">
+            <label class="form-label">English Name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="en_name"
+              [(ngModel)]="newSubcategory.en_name"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Arabic Name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="ar_name"
+              [(ngModel)]="newSubcategory.ar_name"
+              required
+            />
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="!subcategoryForm.valid"
+            >
+              Save
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Subcategory Modal -->
+<div
+  class="modal fade"
+  id="editSubcategoryModal"
+  tabindex="-1"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Edit Subcategory</h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form
+          #editSubcategoryForm="ngForm"
+          (ngSubmit)="saveEditSubcategory(editSubcategoryForm)"
+        >
+          <div class="mb-3">
+            <label class="form-label">English Name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="en_name"
+              [(ngModel)]="editSubcategory.en_name"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Arabic Name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="ar_name"
+              [(ngModel)]="editSubcategory.ar_name"
+              required
+            />
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="!editSubcategoryForm.valid"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

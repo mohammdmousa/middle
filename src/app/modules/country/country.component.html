@@ -1,0 +1,518 @@
+<div class="card shadow-sm border-0">
+  <!-- Card Header -->
+  <div class="card-header bg-gradient-primary text-white py-3">
+    <div class="d-flex justify-content-between align-items-center">
+      <h5 class="m-0 pb-2 fw-semibold" style="width: 100% !important">
+        <i class="fas fa-globe-americas me-2"></i> Countries
+      </h5>
+      <button class="btn-sm btn-light " (click)="exportToExcel()">
+        Export to Excel
+      </button>
+    </div>
+    <div class="custome d-flex justify-content-between align-items-center">
+      <div class="search-box">
+        <div class="input-group">
+          <input
+            type="text"
+            class="form-control border-start-0"
+            placeholder="Search ..."
+            [(ngModel)]="searchTerm"
+            (input)="filterCountries()"
+          />
+          <span class="input-group-text bg-white border-end-0">
+            <i class="fas fa-search text-muted"></i>
+          </span>
+        </div>
+      </div>
+      <button class="btn btn-sm btn-light" (click)="openAddCountryModal()">
+        <i class="fas fa-plus-circle me-1"></i> Add Country
+      </button>
+    </div>
+  </div>
+
+  <!-- Countries Table -->
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width: 50px" class="text-center"></th>
+            <th style="width: 80px">ID</th>
+            <th style="width: 80px">Flag</th>
+            <th>Name (EN)</th>
+            <th>Name (AR)</th>
+            <th style="width: 120px">Status</th>
+            <th style="width: 150px">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let country of getPaginatedCountries()">
+            <!-- Country Row -->
+            <tr [class.table-active]="isExpanded(country.id)">
+              <td class="text-center">
+                <button
+                  class="btn btn-icon btn-sm btn-outline-primary rounded-circle"
+                  (click)="toggleRow(country.id)"
+                  [attr.aria-expanded]="isExpanded(country.id)"
+                >
+                  <i
+                    class="fas fa-chevron-down"
+                    [class.rotate-icon]="isExpanded(country.id)"
+                  ></i>
+                </button>
+              </td>
+              <td class="fw-semibold">{{ country.id }}</td>
+              <td>
+                <img
+                  style="width: 25px"
+                  src="{{ url }}{{ country.flag }}"
+                  alt="Flag"
+                  class="flag-img"
+                />
+              </td>
+              <td>{{ country.en_name }}</td>
+              <td>{{ country.ar_name }}</td>
+              <td>
+                <span
+                  class="status-badge"
+                  [class.status-active]="country.state === 'active'"
+                  [class.status-inactive]="country.state === 'inactive'"
+                >
+                  {{ country.state }}
+                </span>
+                <button
+                  class="btn btn-sm btn-link"
+                  (click)="toggleCountryState(country.id)"
+                  title="Toggle State"
+                >
+                  <i class="fas fa-sync-alt"></i>
+                </button>
+              </td>
+              <td>
+                <div class="d-flex justify-content-around">
+                  <button
+                    class="btn btn-sm btn-icon btn-outline-primary me-1"
+                    (click)="openEditCountryModal(country)"
+                    title="Edit"
+                  >
+                    <i class="far fa-edit"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-icon btn-outline-danger"
+                    (click)="deleteCountry(country.id)"
+                    title="Delete"
+                  >
+                    <i class="far fa-trash-alt"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Regions Row -->
+            <tr *ngIf="isExpanded(country.id)" class="bg-light">
+              <td colspan="7" class="p-0 border-top-0">
+                <div class="p-3">
+                  <div
+                    class="d-flex justify-content-between align-items-center mb-3"
+                  >
+                    <h6 class="m-0 fw-semibold text-primary">
+                      <i class="fas fa-map-marked-alt me-2"></i>
+                      Regions of {{ country.en_name }}
+                    </h6>
+                    <button
+                      class="btn btn-sm btn-primary"
+                      (click)="openAddRegionModal(country.id)"
+                    >
+                      <i class="fas fa-plus-circle me-1"></i> Add Region
+                    </button>
+                  </div>
+                  <div class="table-responsive">
+                    <table
+                      class="table table-sm table-striped table-hover mb-0"
+                    >
+                      <thead>
+                        <tr class="table-primary">
+                          <th style="width: 80px">ID</th>
+                          <th>Name (EN)</th>
+                          <th>Name (AR)</th>
+                          <th style="width: 120px">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let region of country.regions">
+                          <td class="fw-semibold">{{ region.id }}</td>
+                          <td>{{ region.en_name }}</td>
+                          <td>{{ region.ar_name }}</td>
+                          <td>
+                            <div class="d-flex justify-content-around">
+                              <button
+                                class="btn btn-sm btn-icon btn-outline-primary me-1"
+                                (click)="
+                                  openEditRegionModal(region, country.id)
+                                "
+                                title="Edit"
+                              >
+                                <i class="far fa-edit"></i>
+                              </button>
+                              <button
+                                class="btn btn-sm btn-icon btn-outline-danger"
+                                (click)="deleteRegion(region.id, country.id)"
+                                title="Delete"
+                              >
+                                <i class="far fa-trash-alt"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="card-footer d-flex justify-content-center">
+    <nav aria-label="Page navigation">
+      <ul class="pagination">
+        <li class="page-item" [class.disabled]="currentPage === 1">
+          <a
+            class="page-link"
+            href="javascript:void(0)"
+            (click)="currentPage = currentPage - 1"
+          >
+            Previous
+          </a>
+        </li>
+        <li
+          class="page-item"
+          *ngFor="let page of getPageNumbers()"
+          [class.active]="page === currentPage"
+        >
+          <a
+            class="page-link"
+            href="javascript:void(0)"
+            (click)="currentPage = page"
+          >
+            {{ page }}
+          </a>
+        </li>
+        <li class="page-item" [class.disabled]="currentPage === totalPages">
+          <a
+            class="page-link"
+            href="javascript:void(0)"
+            (click)="currentPage = currentPage + 1"
+          >
+            Next
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<!-- Add Country Modal -->
+<div class="modal fade" id="addCountryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Add New Country</h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form #countryForm="ngForm" (ngSubmit)="addCountry(countryForm)">
+          <div class="mb-3">
+            <label class="form-label">English Name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="en_name"
+              [(ngModel)]="newCountry.en_name"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Arabic Name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="ar_name"
+              [(ngModel)]="newCountry.ar_name"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Flag</label>
+            <input
+              type="file"
+              class="form-control"
+              (change)="onFileSelected($event)"
+              accept="image/*"
+              name="flag"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Status</label>
+            <select
+              class="form-select"
+              name="state"
+              [(ngModel)]="newCountry.state"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="!countryForm.valid"
+            >
+              Save
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Country Modal -->
+<div class="modal fade" id="editCountryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Edit Country</h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form
+          #editCountryForm="ngForm"
+          (ngSubmit)="updateCountry(editCountryForm)"
+        >
+          <input type="hidden" name="id" [(ngModel)]="editingCountry.id" />
+
+          <div class="mb-3">
+            <label class="form-label">English Name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="en_name"
+              [(ngModel)]="editingCountry.en_name"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Arabic Name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="ar_name"
+              [(ngModel)]="editingCountry.ar_name"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Flag</label>
+            <input
+              type="file"
+              class="form-control"
+              (change)="onEditFileSelected($event)"
+              accept="image/*"
+              name="flag"
+            />
+            <small class="text-muted"
+              ><img
+                style="width: 25px"
+                src="{{ url }}{{ editingCountry.flag }}"
+                alt=""
+              />Leave empty to keep current flag</small
+            >
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Status</label>
+            <select
+              class="form-select"
+              name="state"
+              [(ngModel)]="editingCountry.state"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="!editCountryForm.valid"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Region Modal -->
+<div class="modal fade" id="addRegionModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Add New Region</h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form #regionForm="ngForm" (ngSubmit)="addRegion(regionForm)">
+          <div class="mb-3">
+            <label class="form-label">English Name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="en_name"
+              [(ngModel)]="newRegion.en_name"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Arabic Name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="ar_name"
+              [(ngModel)]="newRegion.ar_name"
+              required
+            />
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="!regionForm.valid"
+            >
+              Save
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Region Modal -->
+<div class="modal fade" id="editRegionModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Edit Region</h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form
+          #editRegionForm="ngForm"
+          (ngSubmit)="updateRegion(editRegionForm)"
+        >
+          <input type="hidden" name="id" [(ngModel)]="editingRegion.id" />
+          <input
+            type="hidden"
+            name="country_id"
+            [(ngModel)]="editingRegion.country_id"
+          />
+
+          <div class="mb-3">
+            <label class="form-label">English Name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="en_name"
+              [(ngModel)]="editingRegion.en_name"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Arabic Name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="ar_name"
+              [(ngModel)]="editingRegion.ar_name"
+              required
+            />
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="!editRegionForm.valid"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

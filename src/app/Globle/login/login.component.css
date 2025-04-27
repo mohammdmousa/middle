@@ -1,0 +1,56 @@
+  :host {
+    display: block;
+    width: 100%;
+    height: 100vh;
+    position: relative;
+  }
+
+  .custom-back {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .container {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 15px;
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 1200px;
+  }
+
+  /* هنا أضفنا الشفافية */
+  .card {
+    border-radius: 1rem;
+    background-color: rgba(255, 255, 255, 0.7) !important; /* 85% شفافية */
+    backdrop-filter: blur(5px); /* تأثير ضبابي خفيف */
+  }
+
+  .bg-login-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(248, 249, 252, 0.7); /* شفافية للخلفية */
+  }
+
+  .form-control-user {
+    padding: 1.5rem 1rem;
+    font-size: 1.1rem;
+    background-color: rgba(255, 255, 255, 0.8); /* شفافية لحقول الإدخال */
+  }
+
+  .btn-user {
+    padding: 0.75rem;
+    font-size: 1.1rem;
+  }

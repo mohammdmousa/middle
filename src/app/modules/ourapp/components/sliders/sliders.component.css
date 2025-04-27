@@ -1,0 +1,43 @@
+.img-thumbnail {
+  max-height: 100px;
+  object-fit: cover;
+}
+
+.table img {
+  transition: transform 0.3s;
+}
+
+.table img:hover {
+  transform: scale(1.1);
+}
+
+.modal-body img {
+  max-height: 200px;
+  width: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.form-switch .form-check-input {
+  width: 3em;
+  height: 1.5em;
+}
+
+/* Pipe for truncating long links */
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+  max-width: 150px;
+}
+ .image-thumbnail-container {
+    position: relative;
+    height: 120px;
+  }
+
+  .image-thumbnail-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }

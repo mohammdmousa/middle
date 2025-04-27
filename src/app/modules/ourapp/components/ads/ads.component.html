@@ -1,0 +1,169 @@
+<!-- جدول الشريط التسويقي -->
+<div class="container-fluid px-4 py-4">
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-gradient-primary text-white">
+      <div class="d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">
+          <i class="fas fa-ad me-2"></i>Marketing Banners Management
+        </h4>
+        <button class="btn btn-light btn-sm" (click)="openModal('add')">
+          <i class="fas fa-plus me-1"></i>Add New Banner
+        </button>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Title</th>
+              <th>Link</th>
+              <th>Status</th>
+              <th width="120px" class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of bannerItems">
+              <td class="fw-semibold">{{ item.title }}</td>
+              <td>
+                <a
+                  *ngIf="item.link"
+                  [href]="item.link"
+                  target="_blank"
+                  class="text-primary text-decoration-none"
+                >
+                  <i class="fas fa-link me-1"></i>
+                  {{ item.link }}
+                </a>
+                <span *ngIf="!item.link" class="text-muted">No link</span>
+              </td>
+              <td>
+                <div class="form-check form-switch">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    [checked]="item.isActive"
+                    (change)="toggleBannerStatus(item.id, item.isActive)"
+                  />
+                  <label class="form-check-label">
+                    {{ item.isActive ? "Active" : "Inactive" }}
+                  </label>
+                </div>
+              </td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-2">
+                  <button
+                    class="btn btn-sm btn-outline-warning"
+                    (click)="openModal('edit', item)"
+                    title="Edit"
+                  >
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-danger"
+                    (click)="deleteBanner(item.id)"
+                    title="Delete"
+                  >
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="bannerItems.length === 0">
+              <td colspan="4" class="text-center py-5">
+                <div class="d-flex flex-column align-items-center text-muted">
+                  <i class="fas fa-ad fa-3x mb-3 opacity-25"></i>
+                  <h5 class="mb-2">No Marketing Banners Found</h5>
+                  <p class="mb-0">
+                    Click the "Add New Banner" button to create your first
+                    banner
+                  </p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal لإضافة وتعديل الشريط التسويقي -->
+<div class="modal fade" id="bannerModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="fas fa-ad me-2"></i>
+          {{ modalMode === "add" ? "Add New Banner" : "Edit Banner" }}
+        </h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body p-4">
+        <form
+          #bannerForm="ngForm"
+          (ngSubmit)="saveBanner(bannerForm)"
+          class="needs-validation"
+          novalidate
+        >
+          <div class="row g-3">
+            <div class="col-md-12">
+              <label for="title" class="form-label fw-semibold"
+                >Title <span class="text-danger">*</span></label
+              >
+              <input
+                type="text"
+                class="form-control form-control-lg"
+                id="title"
+                [(ngModel)]="currentBanner.title"
+                name="title"
+                required
+                placeholder="Enter banner title"
+              />
+            </div>
+
+            <div class="col-md-12">
+              <label for="link" class="form-label fw-semibold"
+                >Link URL <span class="text-danger">*</span></label
+              >
+              <div class="input-group">
+                <span class="input-group-text"
+                  ><i class="fas fa-link"></i
+                ></span>
+                <input
+                  type="url"
+                  class="form-control"
+                  id="link"
+                  [(ngModel)]="currentBanner.link"
+                  name="link"
+                  required
+                  placeholder="https://example.com"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer border-0 pt-4">
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              data-bs-dismiss="modal"
+            >
+              <i class="fas fa-times me-1"></i>Cancel
+            </button>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save me-1"></i>
+              {{ modalMode === "add" ? "Add Banner" : "Save Changes" }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
